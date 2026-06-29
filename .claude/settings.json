@@ -30,16 +30,16 @@
       }
     ],
     "PreToolUse": [
-      // {
-      //   "matcher": "Edit|MultiEdit|Write",
-      //   "hooks": [
-      //     {
-      //       "type": "command",
-      //       "command": "# Prevent editing on main branch\n[ \"$(git branch --show-current)\" != \"main\" ] || { echo '{\"block\": true, \"message\": \"Cannot edit files on main branch. Create a feature branch first.\"}' >&2; exit 2; }",
-      //       "timeout": 5
-      //     }
-      //   ]
-      // },
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Prevent editing on main branch\n[ \"$(git branch --show-current)\" != \"main\" ] || { echo '{\"block\": true, \"message\": \"Cannot edit files on main branch. Create a feature branch first.\"}' >&2; exit 2; }",
+            "timeout": 5
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
