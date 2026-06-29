@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+
+    "notion": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-notion"],
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      }
+    }
+  }
+}

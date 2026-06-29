@@ -1,0 +1,192 @@
+{
+  "$schema": "./skill-rules.schema.json",
+  "version": "2.0",
+  "config": {
+    "minConfidenceScore": 3,
+    "showMatchReasons": true,
+    "maxSkillsToShow": 5
+  },
+  "scoring": {
+    "keyword": 2,
+    "keywordPattern": 3,
+    "pathPattern": 4,
+    "directoryMatch": 5,
+    "intentPattern": 4,
+    "contentPattern": 3,
+    "contextPattern": 2
+  },
+  "directoryMappings": {
+    "experiments": "experiment-design",
+    "configs": "experiment-design",
+    "data": "data-pipeline",
+    "src/data": "data-pipeline",
+    "src/datasets": "data-pipeline",
+    "src/models": "model-development",
+    "src/model": "model-development",
+    "src/training": "model-development",
+    "src/train": "model-development",
+    "src/evaluation": "evaluation-metrics",
+    "src/eval": "evaluation-metrics",
+    "src/metrics": "evaluation-metrics",
+    "results": "evaluation-metrics",
+    "notebooks": "experiment-design",
+    "tests": "systematic-debugging"
+  },
+  "skills": {
+    "experiment-design": {
+      "description": "Experiment methodology, configs, ablations, sweeps",
+      "priority": 9,
+      "triggers": {
+        "keywords": ["experiment", "ablation", "sweep", "hyperparameter", "config", "baseline", "hypothesis", "ablate"],
+        "keywordPatterns": ["\\bexperiment\\b", "\\bablation\\b", "\\bsweep\\b", "\\bhyperparam"],
+        "pathPatterns": ["**/configs/**", "**/experiments/**", "**/*.yaml", "**/*.yml"],
+        "intentPatterns": [
+          "(?:design|plan|set up|create|run).*(?:experiment|ablation|sweep)",
+          "(?:compare|test).*(?:hypothesis|approach|method)",
+          "(?:config|configure).*(?:training|model|experiment)"
+        ],
+        "contentPatterns": ["hydra", "OmegaConf", "yaml\\.safe_load", "argparse"]
+      },
+      "relatedSkills": ["reproducibility", "evaluation-metrics", "data-pipeline"]
+    },
+    "data-pipeline": {
+      "description": "Data loading, preprocessing, datasets, tokenization",
+      "priority": 8,
+      "triggers": {
+        "keywords": ["dataset", "dataloader", "tokenizer", "preprocessing", "data loading", "augmentation", "collate", "batch"],
+        "keywordPatterns": ["\\bdataset\\b", "\\bdataloader\\b", "\\btokeniz", "\\bpreprocess"],
+        "pathPatterns": ["**/data/**", "**/datasets/**", "**/*dataset*.py", "**/*loader*.py"],
+        "intentPatterns": [
+          "(?:load|process|prepare|clean|split).*(?:data|dataset)",
+          "(?:create|build|write).*(?:dataset|dataloader|pipeline)",
+          "(?:tokeniz).*(?:text|input|data)"
+        ],
+        "contentPatterns": ["DataLoader", "Dataset", "tokenizer", "collate_fn", "from_pretrained"]
+      },
+      "relatedSkills": ["reproducibility", "evaluation-metrics", "systematic-debugging"]
+    },
+    "model-development": {
+      "description": "Model architecture, training loops, checkpointing, optimization",
+      "priority": 9,
+      "triggers": {
+        "keywords": ["model", "training", "train", "architecture", "layer", "attention", "transformer", "checkpoint", "optimizer", "loss function", "backward"],
+        "keywordPatterns": ["\\bmodel\\b", "\\btrain(?:ing)?\\b", "\\bcheckpoint\\b", "\\boptimiz"],
+        "pathPatterns": ["**/models/**", "**/model/**", "**/training/**", "**/*model*.py", "**/*train*.py"],
+        "intentPatterns": [
+          "(?:build|create|modify|implement).*(?:model|layer|architecture)",
+          "(?:train|fine.tune|pretrain).*(?:model|network)",
+          "(?:save|load|resume).*(?:checkpoint|model|weights)",
+          "(?:implement).*(?:attention|transformer|encoder|decoder)"
+        ],
+        "contentPatterns": ["nn\\.Module", "forward\\(", "\\.backward\\(", "optimizer\\.step", "model\\.train\\(", "model\\.eval\\("]
+      },
+      "relatedSkills": ["experiment-design", "systematic-debugging", "reproducibility"]
+    },
+    "evaluation-metrics": {
+      "description": "Evaluation, metrics, benchmarking, statistical significance",
+      "priority": 8,
+      "triggers": {
+        "keywords": ["evaluate", "evaluation", "metric", "benchmark", "accuracy", "perplexity", "bleu", "rouge", "f1", "precision", "recall", "significance"],
+        "keywordPatterns": ["\\beval(?:uat)?\\b", "\\bmetric\\b", "\\bbenchmark\\b", "\\baccuracy\\b"],
+        "pathPatterns": ["**/eval/**", "**/evaluation/**", "**/metrics/**", "**/*eval*.py", "**/*metric*.py"],
+        "intentPatterns": [
+          "(?:evaluate|measure|compute|calculate).*(?:metric|performance|accuracy|score)",
+          "(?:benchmark|compare|test).*(?:model|result|performance)",
+          "(?:report|analyze|summarize).*(?:result|metric|experiment)"
+        ],
+        "contentPatterns": ["accuracy_score", "f1_score", "perplexity", "bleu_score", "rouge"]
+      },
+      "relatedSkills": ["experiment-design", "reproducibility"]
+    },
+    "reproducibility": {
+      "description": "Seeds, determinism, environment pinning, provenance",
+      "priority": 8,
+      "triggers": {
+        "keywords": ["seed", "reproducible", "reproducibility", "deterministic", "pin", "freeze", "environment", "provenance"],
+        "keywordPatterns": ["\\bseed\\b", "\\breproducib", "\\bdeterministic\\b"],
+        "pathPatterns": ["**/requirements*.txt", "**/pyproject.toml", "**/setup.py", "**/setup.cfg"],
+        "intentPatterns": [
+          "(?:set|fix|ensure).*(?:seed|reproducib|deterministic)",
+          "(?:pin|freeze|lock).*(?:depend|version|environment)",
+          "(?:reproduce|replicate).*(?:result|experiment|run)"
+        ],
+        "contentPatterns": ["random\\.seed", "torch\\.manual_seed", "np\\.random\\.seed", "set_all_seeds", "PYTHONHASHSEED"]
+      },
+      "relatedSkills": ["experiment-design", "data-pipeline", "model-development"]
+    },
+    "systematic-debugging": {
+      "description": "Research code debugging — NaN, OOM, shapes, training instability",
+      "priority": 9,
+      "triggers": {
+        "keywords": ["bug", "debug", "fix", "error", "nan", "inf", "oom", "crash", "failing", "broken", "issue"],
+        "keywordPatterns": ["\\bbug\\b", "\\bfix\\b", "\\berror\\b", "\\bnan\\b", "\\boom\\b", "doesn't work", "not working"],
+        "intentPatterns": [
+          "(?:fix|debug|resolve|investigate).*(?:bug|error|issue|problem|nan|oom|crash)",
+          "(?:why).*(?:not working|broken|failing|crash|nan|diverge)",
+          "(?:training).*(?:unstable|diverge|explod|nan)"
+        ],
+        "contentPatterns": ["RuntimeError", "CUDA.*out of memory", "NaN", "traceback", "assert.*Error"]
+      },
+      "excludePatterns": ["fix typo", "fix formatting", "fix lint", "fix import"],
+      "relatedSkills": ["model-development", "data-pipeline"]
+    },
+    "testing-patterns": {
+      "description": "Pytest testing patterns for research code",
+      "priority": 7,
+      "triggers": {
+        "keywords": ["test", "pytest", "unittest", "fixture", "mock", "assert"],
+        "keywordPatterns": ["\\btest(?:s|ing)?\\b", "\\bpytest\\b"],
+        "pathPatterns": ["**/tests/**", "**/test_*.py", "**/*_test.py"],
+        "intentPatterns": [
+          "(?:write|add|create|fix).*(?:test)",
+          "(?:test).*(?:for|of|the)"
+        ],
+        "contentPatterns": ["def test_", "pytest\\.fixture", "pytest\\.mark", "assert_close"]
+      },
+      "excludePatterns": ["test the model", "test the experiment", "test the hypothesis"]
+    },
+    "python-quality": {
+      "description": "Python best practices, typing, linting, project structure",
+      "priority": 5,
+      "triggers": {
+        "keywords": ["type hint", "typing", "ruff", "mypy", "pyright", "lint", "format", "refactor"],
+        "keywordPatterns": ["\\btype\\b.*\\bhint", "\\bruff\\b", "\\bmypy\\b", "\\bpyright\\b"],
+        "pathPatterns": ["**/pyproject.toml", "**/ruff.toml", "**/*.pyi"],
+        "intentPatterns": [
+          "(?:add|fix|improve).*(?:type|typing|hint)",
+          "(?:refactor|clean|improve).*(?:code|module|structure)"
+        ],
+        "contentPatterns": ["from typing import", "-> None", "\\| None"]
+      },
+      "excludePatterns": ["type of model", "type of data"]
+    },
+    "notebook-patterns": {
+      "description": "Jupyter notebook best practices for research",
+      "priority": 6,
+      "triggers": {
+        "keywords": ["notebook", "jupyter", "ipynb", "cell", "kernel"],
+        "keywordPatterns": ["\\bnotebook\\b", "\\bjupyter\\b", "\\bipynb\\b"],
+        "pathPatterns": ["**/*.ipynb", "**/notebooks/**"],
+        "intentPatterns": [
+          "(?:create|write|run).*(?:notebook)",
+          "(?:notebook).*(?:for|of|to)"
+        ]
+      },
+      "relatedSkills": ["experiment-design", "evaluation-metrics"]
+    },
+    "distributed-training": {
+      "description": "Multi-GPU and distributed training patterns",
+      "priority": 7,
+      "triggers": {
+        "keywords": ["distributed", "multi-gpu", "ddp", "fsdp", "deepspeed", "accelerate", "data parallel", "model parallel"],
+        "keywordPatterns": ["\\bddp\\b", "\\bfsdp\\b", "\\bdeepspeed\\b", "multi.gpu", "\\bdistributed\\b"],
+        "intentPatterns": [
+          "(?:scale|distribute|parallelize).*(?:training|model)",
+          "(?:use|set up|configure).*(?:ddp|fsdp|deepspeed|multi.gpu)"
+        ],
+        "contentPatterns": ["DistributedDataParallel", "FullyShardedDataParallel", "deepspeed", "Accelerator"]
+      },
+      "relatedSkills": ["model-development", "reproducibility"]
+    }
+  }
+}

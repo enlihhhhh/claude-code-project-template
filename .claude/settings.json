@@ -1,0 +1,97 @@
+{
+  "model": "claude-opus-4-8[1m]",
+  "effortLevel": "high",
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash .claude/statusline.sh"
+  },
+  "includeCoAuthoredBy": true,
+  "env": {
+    "ENABLE_TOOL_SEARCH": "true",
+    "INSIDE_CLAUDE_CODE": "1",
+    "BASH_DEFAULT_TIMEOUT_MS": "600000",
+    "BASH_MAX_TIMEOUT_MS": "600000",
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8"
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/skill-eval.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      // {
+      //   "matcher": "Edit|MultiEdit|Write",
+      //   "hooks": [
+      //     {
+      //       "type": "command",
+      //       "command": "# Prevent editing on main branch\n[ \"$(git branch --show-current)\" != \"main\" ] || { echo '{\"block\": true, \"message\": \"Cannot edit files on main branch. Create a feature branch first.\"}' >&2; exit 2; }",
+      //       "timeout": 5
+      //     }
+      //   ]
+      // },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Enforce uv over pip\nif echo \"$CLAUDE_TOOL_INPUT_COMMAND\" | grep -qE '\\bpip3?\\s+install\\b'; then\n  echo '{\"block\": true, \"message\": \"Use `uv add <package>` instead of pip install. This project uses uv for dependency management.\"}' >&2\n  exit 2\nfi\nexit 0",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Auto-format Python files with ruff\nif [[ \"$CLAUDE_TOOL_INPUT_FILE_PATH\" =~ \\.py$ ]]; then\n  file_path=\"${CLAUDE_TOOL_INPUT_FILE_PATH}\"\n  ruff format \"$file_path\" 2>&1\n  ruff check --fix --select I \"$file_path\" 2>&1\n  exit_code=$?\n  if [ $exit_code -ne 0 ]; then\n    echo '{\"feedback\": \"Formatting failed. Check file for syntax errors.\"}' >&2\n    exit 1\n  else\n    echo '{\"feedback\": \"Formatted with ruff.\", \"suppressOutput\": true}'\n  fi\nfi",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Auto-run related tests when test files change\nif [[ \"$CLAUDE_TOOL_INPUT_FILE_PATH\" =~ test_.*\\.py$ ]] || [[ \"$CLAUDE_TOOL_INPUT_FILE_PATH\" =~ _test\\.py$ ]]; then\n  echo '{\"feedback\": \"Running tests...\"}' >&2\n  pytest \"${CLAUDE_TOOL_INPUT_FILE_PATH}\" -x --tb=short --no-header -q 2>&1 | tail -30\n  exit_code=${PIPESTATUS[0]}\n  if [ $exit_code -eq 0 ]; then\n    echo '{\"feedback\": \"Tests passed.\"}'\n  else\n    echo '{\"feedback\": \"Tests failed. See output above.\"}' >&2\n  fi\nfi",
+            "timeout": 120
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Lint Python files with ruff (non-blocking)\nif [[ \"$CLAUDE_TOOL_INPUT_FILE_PATH\" =~ \\.py$ ]]; then\n  echo '{\"feedback\": \"Checking lint...\"}' >&2\n  output=$(ruff check \"${CLAUDE_TOOL_INPUT_FILE_PATH}\" 2>&1)\n  exit_code=$?\n  if [ $exit_code -eq 0 ]; then\n    echo '{\"feedback\": \"No lint issues.\", \"suppressOutput\": true}'\n  else\n    errors=$(echo \"$output\" | head -20)\n    if [ -n \"$errors\" ]; then\n      echo '{\"feedback\": \"Ruff found issues:\"}' >&2\n      echo \"$errors\" >&2\n    fi\n  fi\n  exit 0\nfi",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Warn if editing files in data/ or results/ directories\nif [[ \"$CLAUDE_TOOL_INPUT_FILE_PATH\" =~ /data/ ]] || [[ \"$CLAUDE_TOOL_INPUT_FILE_PATH\" =~ /results/ ]]; then\n  echo '{\"feedback\": \"Warning: Editing files in data/ or results/ — these should typically be generated, not hand-edited.\"}' >&2\nfi\nexit 0",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

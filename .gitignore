@@ -216,3 +216,22 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Research artifacts
+data/
+results/
+outputs/
+checkpoints/
+wandb/
+mlruns/
+runs/
+*.pt
+*.ckpt
+*.safetensors
+*.bin
+
+# Large files
+*.hdf5
+*.h5
+*.arrow
+*.parquet
