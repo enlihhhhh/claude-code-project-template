@@ -34,7 +34,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "# Prevent editing on main branch\n[ \"$(git branch --show-current)\" != \"main\" ] || { echo '{\"block\": true, \"message\": \"Cannot edit files on main branch. Create a feature branch first.\"}' >&2; exit 2; }",
+            "command": "# Warn (non-blocking) when editing on the main branch\nif [ \"$(git branch --show-current)\" = \"main\" ]; then\n  echo '{\"systemMessage\": \"⚠️ You are editing on the main branch — consider creating a feature branch first.\", \"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\"}}'\nfi\nexit 0",
             "timeout": 5
           }
         ]
